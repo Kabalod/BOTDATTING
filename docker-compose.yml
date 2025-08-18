@@ -4,9 +4,10 @@ services:
       context: .
       dockerfile: Dockerfile.web
     ports:
-      - "3000:3000"
+      - "3090:3000"
     environment:
       - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:4090/api
     depends_on:
       - api
     networks:
@@ -17,7 +18,7 @@ services:
       context: ./api
       dockerfile: Dockerfile.api
     ports:
-      - "3001:3001"
+      - "4090:3001"
     environment:
       - NODE_ENV=production
     networks:
