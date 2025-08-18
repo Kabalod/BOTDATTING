@@ -2,10 +2,10 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { TelegramProvider } from "@/components/TelegramProvider"
-import { Toaster as SonnerToaster } from "@/components/ui/sonner"
-import { Toaster as ShadToaster } from "@/components/ui/toaster"
+import { ThemeProvider } from "@/providers/ThemeProvider"
+import { TelegramProvider } from "@/providers/TelegramProvider"
+import { Toaster as SonnerToaster } from "@/shared/ui/sonner"
+import { Toaster as ShadToaster } from "@/shared/ui/toaster"
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],

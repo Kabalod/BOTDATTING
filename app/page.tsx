@@ -1,26 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { RegistrationForm } from "@/components/registration-form"
-import { WaitingRoom } from "@/components/waiting-room"
-import { SpeedDatingRoom } from "@/components/speed-dating-room"
-import { AdminPanel } from "@/components/admin-panel"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { RegistrationForm } from "@/features/guest/RegistrationForm"
+import { WaitingRoom } from "@/features/guest/WaitingRoom"
+import { SpeedDatingRoom } from "@/features/guest/SpeedDatingRoom"
+import { AdminPanel } from "@/features/admin/AdminPanel"
+import { Button } from "@/shared/ui/button"
+import { Card } from "@/shared/ui/card"
 import { Heart, Users, Clock, Settings, Zap, MessageCircle, ExternalLink } from "lucide-react"
-import { AnnaWelcomeChat } from "@/components/anna-welcome-chat"
+import { AnnaWelcomeChat } from "@/features/welcome/AnnaWelcomeChat"
+import { User } from "@/features/guest/types"
+import { api } from "@/shared/api"
 
 type AppState = "welcome" | "chat" | "registration" | "waiting" | "dating" | "admin"
 type UserRole = "guest" | "admin"
-
-interface User {
-  id: string
-  name: string
-  gender: "male" | "female"
-  photo?: string
-  description: string
-  tableId?: number
-}
 
 export default function ITSpeedDatingApp() {
   const [appState, setAppState] = useState<AppState>("chat") // Start with chat instead of welcome
@@ -38,11 +31,8 @@ export default function ITSpeedDatingApp() {
     setEventStartTime(startTime)
   }, [eventDate, eventTimeStr])
 
-  const handleRegistrationComplete = (userData: Omit<User, "id">) => {
-    const newUser: User = {
-      ...userData,
-      id: Math.random().toString(36).substr(2, 9),
-    }
+  const handleRegistrationComplete = async (userData: Omit<User, "id">) => {
+    const newUser = await api.registerUser(userData)
     setCurrentUser(newUser)
     setAppState("waiting")
   }

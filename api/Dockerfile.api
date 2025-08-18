@@ -1,0 +1,41 @@
+# Dockerfile.api
+
+# Stage 1: Install dependencies
+FROM node:20-slim AS deps
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy dependency definition files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Stage 2: Build the application
+FROM node:20-slim AS builder
+WORKDIR /app
+RUN npm install -g pnpm
+
+# Copy dependencies from the previous stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Build the NestJS application
+RUN pnpm build
+
+# Stage 3: Production image
+FROM node:20-slim AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+
+EXPOSE 3001
+
+ENV PORT 3001
+
+CMD ["node", "dist/main.js"]

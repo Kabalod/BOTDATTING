@@ -1,42 +1,53 @@
 # IT Speed Dating - Telegram Mini App
 
-Полнофункциональное мини-приложение для IT Speed Dating в Telegram.
+Полнофункциональное мини-приложение для IT Speed Dating в Telegram, построенное на Next.js.
 
-## Роли и пользовательский поток
-- Гость: регистрация → ожидание старта → дейтинг → оценка встречи
-- Админ: настройки события → управление участниками → запуск события
+## Архитектура (Feature-Sliced Design)
 
-## Ключевые экраны и файлы
-- Приветственный чат: `components/anna-welcome-chat.tsx`
-- Welcome и роутер состояний: `app/page.tsx`
-- Регистрация: `components/registration-form.tsx`
-- Ожидание: `components/waiting-room.tsx`
-- Дейтинг: `components/speed-dating-room.tsx`
-- Админ-панель: `components/admin-panel.tsx`
+Проект реструктурирован для лучшей модульности и масштабируемости.
 
-## Дизайн
-- Сине-фиолетовый градиент Pro IT FEST, стеклянные карточки, анимации.
-- Контраст и читаемость: светлые карточки на темном градиенте, белая типографика.
-- Глобальные стили и эффекты: `app/globals.css`.
+-   `app/` - Маршруты и корневые макеты.
+-   `providers/` - Глобальные провайдеры (темы, Telegram API).
+-   `features/` - Функциональные модули (фичи).
+    -   `welcome/` - Приветственный чат.
+    -   `guest/` - Пользовательский флоу (регистрация, ожидание, дейтинг).
+    -   `admin/` - Панель администратора.
+-   `shared/` - Переиспользуемый код.
+    -   `ui/` - UI-компоненты (shadcn/ui).
+    -   `hooks/` - Кастомные хуки.
+    -   `lib/` - Вспомогательные утилиты.
 
-## Интеграция Telegram Mini App
-- Хук: `hooks/useTelegram.ts` (инициализация WebApp, expand, отслеживание темы).
-- Провайдер: `components/TelegramProvider.tsx` (установка цветов заголовка/фона при поддержке).
-- Подключение в макете с темами и тостерами: `app/layout.tsx`.
+## Запуск и переменные окружения
 
-## Связка настроек события
-- Источник настроек: `app/page.tsx` хранит `eventDate`, `eventTimeStr`, `roundDurationMin` и вычисляет `eventStartTime`.
-- `AdminPanel` меняет настройки через `onEventSettingsChange` и отдает их вверх.
-- `WaitingRoom` показывает обратный отсчет и динамическую метку старта.
-- `SpeedDatingRoom` принимает `roundDurationMin` и использует его в таймере и прогрессе.
+1.  **Установка зависимостей:**
+    ```bash
+    npm install --legacy-peer-deps
+    ```
+2.  **Запуск в режиме разработки:**
+    ```bash
+    npm run dev
+    ```
+3.  **Переменные окружения:**
+    Создайте файл `.env.local` в корне проекта и добавьте следующие переменные:
+    ```env
+    # Telegram Bot Credentials
+    NEXT_PUBLIC_TELEGRAM_BOT_USERNAME="your_bot_username"
+    TELEGRAM_BOT_TOKEN="your_telegram_bot_token"
 
-## Оценка и матчинг
-- После раунда: "Хочу встретиться" или "Приятное знакомство".
-- Отправка контактов через 24 часа пока заглушка (требуется сервер/джоб-шедулер).
+    # API Base URL
+    NEXT_PUBLIC_API_URL="http://localhost:4090/api"
 
-## Запуск
-1. Установка: `pnpm i` или `npm i`.
-2. Dev: `pnpm dev` или `npm run dev`.
-3. Prod: `pnpm build && pnpm start` или `npm run build && npm start`.
+    # Database connection (for backend)
+    DATABASE_URL="postgresql://user:password@localhost:5432/mydatabase?schema=public"
 
-Для Telegram WebApp используйте публичный URL (ngrok/Cloudflare Tunnel) в настройках Mini App бота.
+    # Redis connection (for backend jobs/cache)
+    REDIS_URL="redis://localhost:6379"
+    ```
+
+## Задачи агентов
+
+-   **Агент #1 (Frontend):** Рефакторинг, UI/UX, интеграция с API.
+-   **Агент #2 (Backend):** Проектирование и разработка API, БД, бизнес-логики.
+-   **Агент #3 (DevOps):** Docker, CI/CD, настройка окружения.
+
+Для запуска внутри Telegram WebApp используйте публичный URL (ngrok/Cloudflare Tunnel) и укажите его в настройках Mini App у бота.
