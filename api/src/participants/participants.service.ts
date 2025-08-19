@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateParticipantDto } from './dto/create-participant.dto';
+import { CreateParticipantDto, Gender } from './dto/create-participant.dto';
 import { UpdateParticipantDto } from './dto/update-participant.dto';
 
 @Injectable()
 export class ParticipantsService {
-  private readonly participants = []; // Временное хранилище в памяти
+  private readonly participants: Array<CreateParticipantDto & { id: number; status: string; createdAt: Date }> = [];
 
   create(createParticipantDto: CreateParticipantDto) {
     // TODO: Добавить валидацию telegramInitData и логику сохранения в БД
