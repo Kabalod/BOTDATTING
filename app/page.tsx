@@ -11,6 +11,7 @@ import { Heart, Users, Clock, Settings, Zap, MessageCircle, ExternalLink } from 
 import { AnnaWelcomeChat } from "@/features/welcome/AnnaWelcomeChat"
 import { User } from "@/features/guest/types"
 import { api } from "@/shared/api"
+import { useToast } from "@/shared/ui/use-toast"
 
 type AppState = "welcome" | "chat" | "registration" | "waiting" | "dating" | "admin"
 type UserRole = "guest" | "admin"
@@ -23,6 +24,7 @@ export default function ITSpeedDatingApp() {
   const [roundDurationMin, setRoundDurationMin] = useState<number>(7)
   const [eventDate, setEventDate] = useState<string>("2024-08-20")
   const [eventTimeStr, setEventTimeStr] = useState<string>("19:00")
+  const { toast } = useToast()
 
   // Compute event start time from settings
   useEffect(() => {
@@ -32,9 +34,13 @@ export default function ITSpeedDatingApp() {
   }, [eventDate, eventTimeStr])
 
   const handleRegistrationComplete = async (userData: Omit<User, "id">) => {
-    const newUser = await api.registerUser(userData)
-    setCurrentUser(newUser)
-    setAppState("waiting")
+    try {
+      const newUser = await api.registerUser(userData)
+      setCurrentUser(newUser)
+      setAppState("waiting")
+    } catch (e: any) {
+      toast({ title: "Ошибка регистрации", description: e?.message ?? "Попробуйте ещё раз" })
+    }
   }
 
   const handleEventStart = () => {

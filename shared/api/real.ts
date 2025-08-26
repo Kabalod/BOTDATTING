@@ -30,8 +30,11 @@ export const realApi = {
   registerUser: (userData: Omit<User, "id">): Promise<User> => {
     // Backend endpoint: POST /api/participants
     const payload = {
+      name: userData.name,
       bio: userData.description,
       gender: userData.gender === "male" ? "MALE" : "FEMALE",
+      ready: false,
+      paid: false,
     }
     return fetcher("/participants", {
       method: "POST",

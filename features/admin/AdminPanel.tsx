@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/shared/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/shared/ui/dialog"
+import { Input as UiInput } from "@/shared/ui/input"
+import { useToast } from "@/shared/ui/use-toast"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Input } from "@/shared/ui/input"
 import { Label } from "@/shared/ui/label"
@@ -42,6 +45,11 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
   const [activeTab, setActiveTab] = useState<"registered" | "present">("registered")
 
   const [registeredParticipants, setRegisteredParticipants] = useState<Participant[]>([])
+  const [openCreate, setOpenCreate] = useState(false)
+  const [newName, setNewName] = useState("")
+  const [newGender, setNewGender] = useState<"male" | "female">("male")
+  const [newPaid, setNewPaid] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     const fetchParticipants = async () => {
@@ -73,6 +81,7 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
   const maleCount = presentParticipants.filter((p) => p.gender === "male").length
   const femaleCount = presentParticipants.filter((p) => p.gender === "female").length
   const totalTables = Math.floor(Math.min(maleCount, femaleCount))
+  const canStart = totalTables > 0
 
   const handleDeleteParticipant = async (id: string) => {
     const success = await api.deleteParticipant(id)
@@ -204,9 +213,68 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
                   </div>
                   <span className="text-lg font-semibold">Управление участниками</span>
                 </CardTitle>
-                <Button size="sm" className="bg-blue-500 hover:bg-blue-600 rounded-xl">
-                  <Plus className="w-4 h-4" />
-                </Button>
+                <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600 rounded-xl">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Добавить участника</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                      <UiInput placeholder="Имя" value={newName} onChange={(e) => setNewName(e.target.value)} />
+                      <div className="flex gap-2">
+                        <button
+                          className={`px-3 py-2 rounded-lg text-sm border ${newGender === "male" ? "bg-blue-600 text-white" : ""}`}
+                          onClick={() => setNewGender("male")}
+                        >
+                          Мужчина
+                        </button>
+                        <button
+                          className={`px-3 py-2 rounded-lg text-sm border ${newGender === "female" ? "bg-pink-600 text-white" : ""}`}
+                          onClick={() => setNewGender("female")}
+                        >
+                          Женщина
+                        </button>
+                      </div>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={newPaid} onChange={(e) => setNewPaid(e.target.checked)} /> Оплачено
+                      </label>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            const created = await api.registerUser({
+                              id: "temp" as any,
+                              name: newName || "Участник",
+                              gender: newGender,
+                              description: "",
+                            } as any)
+                            // обновим локально:
+                            setRegisteredParticipants((prev) => [
+                              ...prev,
+                              {
+                                id: created.id,
+                                name: created.name,
+                                gender: created.gender,
+                                registeredAt: new Date(),
+                                paid: newPaid,
+                                ready: false,
+                              },
+                            ])
+                            setOpenCreate(false)
+                            setNewName("")
+                          } catch (e: any) {
+                            toast({ title: "Ошибка добавления", description: e?.message ?? "Попробуйте ещё раз" })
+                          }
+                        }}
+                      >
+                        Сохранить
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
 
               {/* Табы */}
@@ -357,6 +425,7 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
               onClick={onEventStart}
               className="w-full h-14 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 group"
               size="lg"
+              disabled={!canStart}
             >
               <Play className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" />
               Начать событие ({presentParticipants.length} участников)

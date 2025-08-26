@@ -10,12 +10,12 @@ export class ParticipantsService {
   create(createParticipantDto: CreateParticipantDto): Participant {
     const newUser: Participant = {
       id: String(this.participants.length + 1),
-      name: undefined,
+      name: createParticipantDto.name,
       bio: createParticipantDto.bio,
       gender: createParticipantDto.gender as Gender,
       status: 'REGISTERED',
-      ready: false,
-      paid: false,
+      ready: createParticipantDto.ready ?? false,
+      paid: createParticipantDto.paid ?? false,
       registeredAt: new Date(),
       createdAt: new Date(),
     };
