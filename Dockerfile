@@ -16,6 +16,7 @@ RUN pnpm install --frozen-lockfile
 # Stage 2: Build the application
 FROM node:20-slim AS builder
 WORKDIR /app
+RUN npm install -g pnpm
 
 # Copy dependencies from the previous stage
 COPY --from=deps /app/node_modules ./node_modules
