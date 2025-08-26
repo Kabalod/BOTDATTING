@@ -26,4 +26,8 @@ export class CreateParticipantDto {
   @IsBoolean()
   @IsOptional()
   paid?: boolean;
+
+  @IsString()
+  @IsOptional()
+  eventId?: string;
 }

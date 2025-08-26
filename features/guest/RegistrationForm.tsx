@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/shared/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Input } from "@/shared/ui/input"
@@ -25,11 +25,25 @@ export function RegistrationForm({ onComplete, onBack }: RegistrationFormProps) 
     gender: "" as "male" | "female" | "",
     photo: "",
     description: "",
+    eventId: "",
   })
   const [submitting, setSubmitting] = useState(false)
+  const [events, setEvents] = useState<{ id: string; title?: string; eventDate: string; eventTime: string }[]>([])
 
   const [step, setStep] = useState(1)
   const totalSteps = 4
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        const apiMod = await import("@/shared/api")
+        const list = (await (apiMod.api as any).listEvents?.()) || []
+        const next = (await (apiMod.api as any).getNextEvent?.()) || null
+        if (Array.isArray(list)) setEvents(list)
+        if (next?.id && !formData.eventId) setFormData((p) => ({ ...p, eventId: String(next.id) }))
+      } catch {}
+    })()
+  }, [])
 
   const handleSubmit = async () => {
     if (!(formData.name && formData.gender && formData.description)) return
@@ -40,6 +54,7 @@ export function RegistrationForm({ onComplete, onBack }: RegistrationFormProps) 
         gender: formData.gender,
         photo: formData.photo,
         description: formData.description,
+        eventId: formData.eventId || undefined,
       })
     } finally {
       setSubmitting(false)
@@ -107,6 +122,22 @@ export function RegistrationForm({ onComplete, onBack }: RegistrationFormProps) 
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="h-12"
                 />
+                <div className="space-y-2 mt-4">
+                  <Label>Событие</Label>
+                  <select
+                    value={formData.eventId}
+                    onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
+                    className="w-full h-12 rounded-md border px-3 bg-background"
+                  >
+                    <option value="">Ближайшее</option>
+                    {events.map((ev) => (
+                      <option key={ev.id} value={ev.id}>
+                        {ev.title ? ev.title + " — " : ""}
+                        {ev.eventDate} {ev.eventTime}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
 

@@ -18,6 +18,7 @@ export class ParticipantsService {
       paid: createParticipantDto.paid ?? false,
       registeredAt: new Date(),
       createdAt: new Date(),
+      eventId: createParticipantDto.eventId,
     };
     this.participants.push(newUser);
     return newUser;

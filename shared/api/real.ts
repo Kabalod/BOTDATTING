@@ -26,8 +26,22 @@ async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const realApi = {
+  // --- Settings ---
+  getSettings: (): Promise<{ eventDate: string; eventTime: string; roundDuration: number }> =>
+    fetcher('/settings'),
+  updateSettings: (patch: Partial<{ eventDate: string; eventTime: string; roundDuration: number }>) =>
+    fetcher('/settings', { method: 'PATCH', body: JSON.stringify(patch) }),
+
+  // --- Events ---
+  listEvents: (): Promise<any[]> => fetcher('/events'),
+  getNextEvent: (): Promise<any | null> => fetcher('/events/next'),
+  createEvent: (data: { title?: string; eventDate: string; eventTime: string; roundDuration: number }) =>
+    fetcher('/events', { method: 'POST', body: JSON.stringify(data) }),
+  updateEvent: (id: string, patch: Partial<{ title: string; eventDate: string; eventTime: string; roundDuration: number }>) =>
+    fetcher(`/events/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteEvent: (id: string) => fetcher(`/events/${id}`, { method: 'DELETE' }).then(() => true),
   // --- Guest Endpoints ---
-  registerUser: (userData: Omit<User, "id">): Promise<User> => {
+  registerUser: (userData: Omit<User, "id"> & { eventId?: string }): Promise<User> => {
     // Backend endpoint: POST /api/participants
     const payload = {
       name: userData.name,
@@ -35,6 +49,7 @@ export const realApi = {
       gender: userData.gender === "male" ? "MALE" : "FEMALE",
       ready: false,
       paid: false,
+      eventId: userData.eventId,
     }
     return fetcher("/participants", {
       method: "POST",
