@@ -12,6 +12,7 @@ import { AnnaWelcomeChat } from "@/features/welcome/AnnaWelcomeChat"
 import { User } from "@/features/guest/types"
 import { api } from "@/shared/api"
 import { useToast } from "@/shared/ui/use-toast"
+import { useTelegram } from "@/shared/hooks/useTelegram"
 
 type AppState = "welcome" | "chat" | "registration" | "waiting" | "dating" | "admin"
 type UserRole = "guest" | "admin"
@@ -25,6 +26,7 @@ export default function ITSpeedDatingApp() {
   const [eventDate, setEventDate] = useState<string>("2024-08-20")
   const [eventTimeStr, setEventTimeStr] = useState<string>("19:00")
   const { toast } = useToast()
+  const { userPhotoUrl } = useTelegram()
 
   // Compute event start time from settings
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function ITSpeedDatingApp() {
 
   const handleRegistrationComplete = async (userData: Omit<User, "id">) => {
     try {
-      const newUser = await api.registerUser(userData)
+      const newUser = await api.registerUser({ ...userData, photo: userPhotoUrl ?? userData.photo })
       setCurrentUser(newUser)
       setAppState("waiting")
     } catch (e: any) {

@@ -23,6 +23,7 @@ export function useTelegram() {
   const [webApp, setWebApp] = useState<TelegramWebApp | null>(null)
   const [isTelegram, setIsTelegram] = useState(false)
   const [themeParams, setThemeParams] = useState<Record<string, string> | null>(null)
+  const [user, setUser] = useState<any | null>(null)
 
   useEffect(() => {
     const tg = window?.Telegram?.WebApp
@@ -36,6 +37,10 @@ export function useTelegram() {
     } catch {}
 
     if (tg.themeParams) setThemeParams({ ...tg.themeParams })
+    try {
+      const u: any = (tg as any)?.initDataUnsafe?.user
+      if (u) setUser(u)
+    } catch {}
 
     const handleThemeChange = () => {
       if (tg.themeParams) setThemeParams({ ...tg.themeParams })
@@ -48,8 +53,9 @@ export function useTelegram() {
   }, [])
 
   const initDataUnsafe = useMemo(() => webApp?.initDataUnsafe, [webApp])
+  const userPhotoUrl = useMemo(() => (user as any)?.photo_url ?? null, [user])
 
-  return { tg: webApp, isTelegram, themeParams, initDataUnsafe }
+  return { tg: webApp, isTelegram, themeParams, initDataUnsafe, user, userPhotoUrl }
 }
 
 

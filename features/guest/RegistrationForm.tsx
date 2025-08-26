@@ -26,18 +26,23 @@ export function RegistrationForm({ onComplete, onBack }: RegistrationFormProps) 
     photo: "",
     description: "",
   })
+  const [submitting, setSubmitting] = useState(false)
 
   const [step, setStep] = useState(1)
   const totalSteps = 4
 
-  const handleSubmit = () => {
-    if (formData.name && formData.gender && formData.description) {
-      onComplete({
+  const handleSubmit = async () => {
+    if (!(formData.name && formData.gender && formData.description)) return
+    try {
+      setSubmitting(true)
+      await onComplete({
         name: formData.name,
         gender: formData.gender,
         photo: formData.photo,
         description: formData.description,
       })
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -129,10 +134,8 @@ export function RegistrationForm({ onComplete, onBack }: RegistrationFormProps) 
               <div className="space-y-4">
                 <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
                   <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground mb-2">Загрузите фотографию (необязательно)</p>
-                  <Button variant="outline" size="sm">
-                    Выбрать файл
-                  </Button>
+                  <p className="text-sm text-muted-foreground mb-2">Фото возьмём из Telegram автоматически</p>
+                  <p className="text-xs text-muted-foreground">Можно пропустить</p>
                 </div>
                 {formData.photo && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -169,7 +172,7 @@ export function RegistrationForm({ onComplete, onBack }: RegistrationFormProps) 
                   Далее
                 </Button>
               ) : (
-                <Button onClick={handleSubmit} disabled={!canProceed()} className="flex-1">
+                <Button onClick={handleSubmit} disabled={!canProceed() || submitting} className="flex-1">
                   Завершить регистрацию
                 </Button>
               )}
