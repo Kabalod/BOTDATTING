@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ParticipantsService } from './participants.service';
 import { CreateParticipantDto } from './dto/create-participant.dto';
 import { UpdateParticipantDto } from './dto/update-participant.dto';
@@ -13,8 +13,8 @@ export class ParticipantsController {
   }
 
   @Get()
-  findAll() {
-    return this.participantsService.findAll();
+  findAll(@Query('eventId') eventId?: string) {
+    return this.participantsService.findAll(eventId);
   }
 
   @Get(':id')

@@ -24,8 +24,9 @@ export class ParticipantsService {
     return newUser;
   }
 
-  findAll(): Participant[] {
-    return this.participants;
+  findAll(eventId?: string): Participant[] {
+    if (!eventId) return this.participants
+    return this.participants.filter((p) => p.eventId === eventId)
   }
 
   findOne(id: string): Participant | undefined {
