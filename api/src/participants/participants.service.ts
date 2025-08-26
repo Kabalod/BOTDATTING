@@ -1,36 +1,49 @@
 import { Injectable } from '@nestjs/common';
-import { CreateParticipantDto } from './dto/create-participant.dto';
+import { CreateParticipantDto, Gender } from './dto/create-participant.dto';
 import { UpdateParticipantDto } from './dto/update-participant.dto';
+import { Participant } from './entities/participant.entity';
 
 @Injectable()
 export class ParticipantsService {
-  private readonly participants = []; // Временное хранилище в памяти
+  private readonly participants: Participant[] = []; // Временное хранилище в памяти
 
-  create(createParticipantDto: CreateParticipantDto) {
-    // TODO: Добавить валидацию telegramInitData и логику сохранения в БД
-    const newUser = {
-      id: this.participants.length + 1, // Простой инкремент для примера
-      ...createParticipantDto,
+  create(createParticipantDto: CreateParticipantDto): Participant {
+    const newUser: Participant = {
+      id: String(this.participants.length + 1),
+      name: undefined,
+      bio: createParticipantDto.bio,
+      gender: createParticipantDto.gender as Gender,
       status: 'REGISTERED',
+      ready: false,
+      paid: false,
+      registeredAt: new Date(),
       createdAt: new Date(),
     };
     this.participants.push(newUser);
     return newUser;
   }
 
-  findAll() {
+  findAll(): Participant[] {
     return this.participants;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} participant`;
+  findOne(id: string): Participant | undefined {
+    return this.participants.find((p) => p.id === id);
   }
 
-  update(id: number, updateParticipantDto: UpdateParticipantDto) {
-    return `This action updates a #${id} participant`;
+  update(id: string, updateParticipantDto: UpdateParticipantDto): Participant | undefined {
+    const idx = this.participants.findIndex((p) => p.id === id);
+    if (idx === -1) return undefined;
+    const updated: Participant = { ...this.participants[idx], ...updateParticipantDto } as Participant;
+    this.participants[idx] = updated;
+    return updated;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} participant`;
+  remove(id: string): boolean {
+    const before = this.participants.length;
+    const after = this.participants.filter((p) => p.id !== id);
+    const removed = after.length !== before;
+    if (removed) this.participants.splice(0, this.participants.length, ...after);
+    return removed;
   }
 }
