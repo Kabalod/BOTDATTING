@@ -45,6 +45,7 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
   const [activeTab, setActiveTab] = useState<"registered" | "present">("registered")
 
   const [registeredParticipants, setRegisteredParticipants] = useState<Participant[]>([])
+  const [events, setEvents] = useState<any[]>([])
   const [openCreate, setOpenCreate] = useState(false)
   const [newName, setNewName] = useState("")
   const [newGender, setNewGender] = useState<"male" | "female">("male")
@@ -63,6 +64,12 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
 
   useEffect(() => {
     fetchParticipants()
+    ;(async () => {
+      try {
+        const list = await (api as any).listEvents?.()
+        setEvents(Array.isArray(list) ? list : [])
+      } catch {}
+    })()
   }, [])
 
   const presentParticipants = registeredParticipants.filter((p) => p.ready)
@@ -238,6 +245,17 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
                     </DialogHeader>
                     <div className="space-y-3">
                       <UiInput placeholder="Имя" value={newName} onChange={(e) => setNewName(e.target.value)} />
+                      <div>
+                        <label className="text-sm text-gray-600">Событие</label>
+                        <select
+                          className="w-full mt-1 p-2 border rounded-xl"
+                          value={(undefined as any) as string}
+                          onChange={() => {}}
+                          disabled
+                        >
+                          <option>{events[0] ? `${events[0].eventDate} ${events[0].eventTime}` : "Ближайшее событие"}</option>
+                        </select>
+                      </div>
                       <div className="flex gap-2">
                         <button
                           className={`px-3 py-2 rounded-lg text-sm border ${newGender === "male" ? "bg-blue-600 text-white" : ""}`}
