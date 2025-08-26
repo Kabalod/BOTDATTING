@@ -72,8 +72,9 @@ export const realApi = {
   },
 
   // --- Admin Endpoints ---
-  getParticipants: (): Promise<Participant[]> => {
-    return fetcher("/participants").then((list: any[]) =>
+  getParticipants: (eventId?: string): Promise<Participant[]> => {
+    const q = eventId ? `?eventId=${encodeURIComponent(eventId)}` : ""
+    return fetcher(`/participants${q}`).then((list: any[]) =>
       list.map((p) => ({
         id: String(p.id),
         name: p.name ?? "Участник",

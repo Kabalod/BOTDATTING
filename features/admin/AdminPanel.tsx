@@ -46,6 +46,7 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
 
   const [registeredParticipants, setRegisteredParticipants] = useState<Participant[]>([])
   const [events, setEvents] = useState<any[]>([])
+  const [activeEventId, setActiveEventId] = useState<string | null>(null)
   const [openCreate, setOpenCreate] = useState(false)
   const [newName, setNewName] = useState("")
   const [newGender, setNewGender] = useState<"male" | "female">("male")
@@ -55,12 +56,16 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
   const fetchParticipants = async () => {
     setIsLoading(true)
     try {
-      const participants = await api.getParticipants()
+      const participants = await api.getParticipants(activeEventId || undefined)
       setRegisteredParticipants(participants)
     } finally {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    setActiveEventId((prev) => prev ?? (typeof window !== 'undefined' ? localStorage.getItem('activeEventId') : null))
+  }, [])
 
   useEffect(() => {
     fetchParticipants()
@@ -70,7 +75,8 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
         setEvents(Array.isArray(list) ? list : [])
       } catch {}
     })()
-  }, [])
+    if (typeof window !== 'undefined' && activeEventId) localStorage.setItem('activeEventId', activeEventId)
+  }, [activeEventId])
 
   const presentParticipants = registeredParticipants.filter((p) => p.ready)
 
@@ -182,6 +188,23 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
                   className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
                 />
               </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" /> Активное событие
+                </Label>
+                <select
+                  value={activeEventId ?? ""}
+                  onChange={(e) => setActiveEventId(e.target.value || null)}
+                  className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl p-2"
+                >
+                  <option value="">— не выбрано —</option>
+                  {events.map((ev) => (
+                    <option key={ev.id} value={ev.id}>
+                      {(ev.title ?? "Событие")} — {ev.eventDate} {ev.eventTime}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex gap-2">
                 <Button
                   onClick={() => toast({ title: "Настройки применены", description: `${eventDate} ${eventTime}, ${roundDuration} мин.` })}
@@ -284,6 +307,7 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
                               name: newName.trim(),
                               gender: newGender,
                               description: "",
+                              eventId: activeEventId || (events[0]?.id ? String(events[0].id) : undefined),
                             } as any)
                             if (newPaid) {
                               await api.updateParticipant(created.id, { paid: true })
