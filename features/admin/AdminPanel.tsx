@@ -51,13 +51,17 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
   const [newPaid, setNewPaid] = useState(false)
   const { toast } = useToast()
 
-  useEffect(() => {
-    const fetchParticipants = async () => {
-      setIsLoading(true)
+  const fetchParticipants = async () => {
+    setIsLoading(true)
+    try {
       const participants = await api.getParticipants()
       setRegisteredParticipants(participants)
+    } finally {
       setIsLoading(false)
     }
+  }
+
+  useEffect(() => {
     fetchParticipants()
   }, [])
 
@@ -171,6 +175,15 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
                   className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
                 />
               </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => toast({ title: "Настройки применены", description: `${eventDate} ${eventTime}, ${roundDuration} мин.` })}
+                  className="rounded-xl"
+                >
+                  Применить настройки
+                </Button>
+                <Badge variant="secondary">Ближайшая игра: {eventDate} {eventTime}</Badge>
+              </div>
             </CardContent>
           </Card>
 
@@ -244,27 +257,24 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
                       </label>
                       <Button
                         onClick={async () => {
+                          if (!newName.trim()) {
+                            toast({ title: "Укажите имя" })
+                            return
+                          }
                           try {
                             const created = await api.registerUser({
-                              id: "temp" as any,
-                              name: newName || "Участник",
+                              name: newName.trim(),
                               gender: newGender,
                               description: "",
                             } as any)
-                            // обновим локально:
-                            setRegisteredParticipants((prev) => [
-                              ...prev,
-                              {
-                                id: created.id,
-                                name: created.name,
-                                gender: created.gender,
-                                registeredAt: new Date(),
-                                paid: newPaid,
-                                ready: false,
-                              },
-                            ])
+                            if (newPaid) {
+                              await api.updateParticipant(created.id, { paid: true })
+                            }
+                            await fetchParticipants()
                             setOpenCreate(false)
                             setNewName("")
+                            setNewPaid(false)
+                            toast({ title: "Участник добавлен" })
                           } catch (e: any) {
                             toast({ title: "Ошибка добавления", description: e?.message ?? "Попробуйте ещё раз" })
                           }
