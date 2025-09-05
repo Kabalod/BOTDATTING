@@ -15,6 +15,7 @@ interface RegistrationFormProps {
     gender: "male" | "female"
     photo?: string
     description: string
+    eventIds?: string[]
   }) => void
   onBack: () => void
 }
@@ -25,7 +26,7 @@ export function RegistrationForm({ onComplete, onBack }: RegistrationFormProps) 
     gender: "" as "male" | "female" | "",
     photo: "",
     description: "",
-    eventId: "",
+    eventIds: [] as string[],
   })
   const [submitting, setSubmitting] = useState(false)
   const [events, setEvents] = useState<{ id: string; title?: string; eventDate: string; eventTime: string }[]>([])
@@ -40,7 +41,7 @@ export function RegistrationForm({ onComplete, onBack }: RegistrationFormProps) 
         const list = (await (apiMod.api as any).listEvents?.()) || []
         const next = (await (apiMod.api as any).getNextEvent?.()) || null
         if (Array.isArray(list)) setEvents(list)
-        if (next?.id && !formData.eventId) setFormData((p) => ({ ...p, eventId: String(next.id) }))
+        if (next?.id && formData.eventIds.length === 0) setFormData((p) => ({ ...p, eventIds: [String(next.id)] }))
       } catch {}
     })()
   }, [])
@@ -54,7 +55,7 @@ export function RegistrationForm({ onComplete, onBack }: RegistrationFormProps) 
         gender: formData.gender,
         photo: formData.photo,
         description: formData.description,
-        eventId: formData.eventId || undefined,
+        eventIds: formData.eventIds.length > 0 ? formData.eventIds : undefined,
       })
     } finally {
       setSubmitting(false)
@@ -123,20 +124,31 @@ export function RegistrationForm({ onComplete, onBack }: RegistrationFormProps) 
                   className="h-12"
                 />
                 <div className="space-y-2 mt-4">
-                  <Label>Событие</Label>
-                  <select
-                    value={formData.eventId}
-                    onChange={(e) => setFormData({ ...formData, eventId: e.target.value })}
-                    className="w-full h-12 rounded-md border px-3 bg-background"
-                  >
-                    <option value="">Ближайшее</option>
+                  <Label>События (можно выбрать несколько)</Label>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
                     {events.map((ev) => (
-                      <option key={ev.id} value={ev.id}>
-                        {ev.title ? ev.title + " — " : ""}
-                        {ev.eventDate} {ev.eventTime}
-                      </option>
+                      <label key={ev.id} className="flex items-center space-x-2 p-2 border rounded-lg hover:bg-muted/50">
+                        <input
+                          type="checkbox"
+                          checked={formData.eventIds.includes(ev.id)}
+                          onChange={(e) => {
+                            const newEventIds = e.target.checked
+                              ? [...formData.eventIds, ev.id]
+                              : formData.eventIds.filter(id => id !== ev.id)
+                            setFormData({ ...formData, eventIds: newEventIds })
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm">
+                          {ev.title ? ev.title + " — " : ""}
+                          {ev.eventDate} {ev.eventTime}
+                        </span>
+                      </label>
                     ))}
-                  </select>
+                  </div>
+                  {events.length === 0 && (
+                    <p className="text-sm text-muted-foreground">События загружаются...</p>
+                  )}
                 </div>
               </div>
             )}

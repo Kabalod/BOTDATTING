@@ -15,11 +15,11 @@ import { useToast } from "@/shared/ui/use-toast"
 import { useTelegram } from "@/shared/hooks/useTelegram"
 
 type AppState = "welcome" | "chat" | "registration" | "waiting" | "dating" | "admin"
-type UserRole = "guest" | "admin"
+// type UserRole = "guest" | "admin" // TODO: Use for role-based features
 
 export default function ITSpeedDatingApp() {
   const [appState, setAppState] = useState<AppState>("chat") // Start with chat instead of welcome
-  const [userRole, setUserRole] = useState<UserRole>("guest")
+  // const [userRole, setUserRole] = useState<UserRole>("guest") // TODO: Use for role-based features
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [eventStartTime, setEventStartTime] = useState<Date | null>(null)
   const [roundDurationMin, setRoundDurationMin] = useState<number>(7)
@@ -40,8 +40,9 @@ export default function ITSpeedDatingApp() {
       const newUser = await api.registerUser({ ...userData, photo: userPhotoUrl ?? userData.photo })
       setCurrentUser(newUser)
       setAppState("waiting")
-    } catch (e: any) {
-      toast({ title: "Ошибка регистрации", description: e?.message ?? "Попробуйте ещё раз" })
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : "Попробуйте ещё раз"
+      toast({ title: "Ошибка регистрации", description: errorMessage })
     }
   }
 

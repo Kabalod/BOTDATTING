@@ -41,7 +41,7 @@ export const realApi = {
     fetcher(`/events/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   deleteEvent: (id: string) => fetcher(`/events/${id}`, { method: 'DELETE' }).then(() => true),
   // --- Guest Endpoints ---
-  registerUser: (userData: Omit<User, "id"> & { eventId?: string }): Promise<User> => {
+  registerUser: (userData: Omit<User, "id"> & { eventIds?: string[] }): Promise<User> => {
     // Backend endpoint: POST /api/participants
     const payload = {
       name: userData.name,
@@ -49,7 +49,7 @@ export const realApi = {
       gender: userData.gender === "male" ? "MALE" : "FEMALE",
       ready: false,
       paid: false,
-      eventId: userData.eventId,
+      eventIds: userData.eventIds,
     }
     return fetcher("/participants", {
       method: "POST",

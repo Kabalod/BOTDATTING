@@ -11,6 +11,9 @@ interface TelegramWebApp {
   setBackgroundColor?: (colorKeyOrHex: string) => void
   onEvent?: (event: string, cb: () => void) => void
   offEvent?: (event: string, cb: () => void) => void
+  showPopup?: (params: any, callback?: (buttonId: string) => void) => void
+  showDatePicker?: (callback: (timestamp: number) => void) => void
+  showTimePicker?: (callback: (timestamp: number) => void) => void
 }
 
 declare global {

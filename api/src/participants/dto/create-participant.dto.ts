@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, IsArray } from 'class-validator';
 
 export enum Gender {
   MALE = 'MALE',
@@ -27,7 +27,8 @@ export class CreateParticipantDto {
   @IsOptional()
   paid?: boolean;
 
-  @IsString()
+  @IsArray()
+  @IsString({ each: true })
   @IsOptional()
-  eventId?: string;
+  eventIds?: string[];
 }

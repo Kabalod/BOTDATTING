@@ -33,6 +33,13 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy package files and install production dependencies
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
+
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder /app/public ./public

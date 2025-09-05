@@ -18,7 +18,7 @@ export class ParticipantsService {
       paid: createParticipantDto.paid ?? false,
       registeredAt: new Date(),
       createdAt: new Date(),
-      eventId: createParticipantDto.eventId,
+      eventIds: createParticipantDto.eventIds,
     };
     this.participants.push(newUser);
     return newUser;
@@ -26,7 +26,7 @@ export class ParticipantsService {
 
   findAll(eventId?: string): Participant[] {
     if (!eventId) return this.participants
-    return this.participants.filter((p) => p.eventId === eventId)
+    return this.participants.filter((p) => p.eventIds?.includes(eventId))
   }
 
   findOne(id: string): Participant | undefined {

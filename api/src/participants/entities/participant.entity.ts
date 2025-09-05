@@ -10,5 +10,5 @@ export class Participant {
   paid?: boolean;
   registeredAt: Date;
   createdAt: Date;
-  eventId?: string;
+  eventIds?: string[];
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/shared/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/shared/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/shared/ui/alert-dialog"
 import { Input as UiInput } from "@/shared/ui/input"
 import { useToast } from "@/shared/ui/use-toast"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
@@ -27,6 +28,7 @@ import {
 } from "lucide-react"
 import { Participant } from "./types"
 import { api } from "@/shared/api"
+import { useTelegram } from "@/shared/hooks/useTelegram"
 
 interface AdminPanelProps {
   onBack: () => void
@@ -51,7 +53,50 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
   const [newName, setNewName] = useState("")
   const [newGender, setNewGender] = useState<"male" | "female">("male")
   const [newPaid, setNewPaid] = useState(false)
+  const [deleteParticipantId, setDeleteParticipantId] = useState<string | null>(null)
   const { toast } = useToast()
+  const { tg, isTelegram } = useTelegram()
+
+  // Telegram date/time picker functions
+  const openDatePicker = () => {
+    if (!tg?.showPopup) return
+    tg.showPopup({
+      title: "Выберите дату события",
+      message: "Выберите дату проведения IT Speed Dating",
+      buttons: [
+        { id: "date", type: "default", text: "Выбрать дату" },
+        { type: "cancel" }
+      ]
+    }, (buttonId) => {
+      if (buttonId === "date" && tg.showDatePicker) {
+        tg.showDatePicker((timestamp) => {
+          const date = new Date(timestamp * 1000)
+          const dateStr = date.toISOString().split('T')[0]
+          onEventSettingsChange({ eventDate: dateStr, eventTime, roundDuration })
+        })
+      }
+    })
+  }
+
+  const openTimePicker = () => {
+    if (!tg?.showPopup) return
+    tg.showPopup({
+      title: "Выберите время события",
+      message: "Выберите время начала IT Speed Dating",
+      buttons: [
+        { id: "time", type: "default", text: "Выбрать время" },
+        { type: "cancel" }
+      ]
+    }, (buttonId) => {
+      if (buttonId === "time" && tg.showTimePicker) {
+        tg.showTimePicker((timestamp) => {
+          const date = new Date(timestamp * 1000)
+          const timeStr = date.toTimeString().slice(0, 5)
+          onEventSettingsChange({ eventDate, eventTime: timeStr, roundDuration })
+        })
+      }
+    })
+  }
 
   const fetchParticipants = async () => {
     setIsLoading(true)
@@ -100,11 +145,16 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
   const totalTables = Math.floor(Math.min(maleCount, femaleCount))
   const canStart = totalTables > 0
 
-  const handleDeleteParticipant = async (id: string) => {
-    const success = await api.deleteParticipant(id)
+  const handleDeleteParticipant = async () => {
+    if (!deleteParticipantId) return
+    const success = await api.deleteParticipant(deleteParticipantId)
     if (success) {
-      setRegisteredParticipants((prev) => prev.filter((p) => p.id !== id))
+      setRegisteredParticipants((prev) => prev.filter((p) => p.id !== deleteParticipantId))
+      toast({ title: "Участник удален", description: "Участник успешно удален из системы" })
+    } else {
+      toast({ title: "Ошибка удаления", description: "Не удалось удалить участника", variant: "destructive" })
     }
+    setDeleteParticipantId(null)
   }
 
   const handleToggleReady = async (id: string) => {
@@ -114,7 +164,17 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
     const updatedParticipant = await api.updateParticipant(id, { ready: !participant.ready })
     if (updatedParticipant) {
       setRegisteredParticipants((prev) => prev.map((p) => (p.id === id ? updatedParticipant : p)))
+      toast({
+        title: participant.ready ? "Участник отмечен как отсутствующий" : "Участник отмечен как присутствующий",
+        description: `Статус ${participant.name} обновлен`
+      })
+    } else {
+      toast({ title: "Ошибка обновления", description: "Не удалось обновить статус участника", variant: "destructive" })
     }
+  }
+
+  const confirmDeleteParticipant = (id: string) => {
+    setDeleteParticipantId(id)
   }
 
   return (
@@ -151,26 +211,50 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
                     <Calendar className="w-4 h-4" />
                     Дата
                   </Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={eventDate}
-                    onChange={(e) => onEventSettingsChange({ eventDate: e.target.value, eventTime, roundDuration })}
-                    className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
-                  />
+                  {isTelegram ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={openDatePicker}
+                      className="w-full justify-start text-left font-normal border-gray-200 hover:border-blue-500 rounded-xl"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {eventDate || "Выберите дату"}
+                    </Button>
+                  ) : (
+                    <Input
+                      id="date"
+                      type="date"
+                      value={eventDate}
+                      onChange={(e) => onEventSettingsChange({ eventDate: e.target.value, eventTime, roundDuration })}
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
+                    />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="time" className="text-sm font-medium text-gray-700 flex items-center gap-2">
                     <Clock className="w-4 h-4" />
                     Время
                   </Label>
-                  <Input
-                    id="time"
-                    type="time"
-                    value={eventTime}
-                    onChange={(e) => onEventSettingsChange({ eventDate, eventTime: e.target.value, roundDuration })}
-                    className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
-                  />
+                  {isTelegram ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={openTimePicker}
+                      className="w-full justify-start text-left font-normal border-gray-200 hover:border-blue-500 rounded-xl"
+                    >
+                      <Clock className="mr-2 h-4 w-4" />
+                      {eventTime || "Выберите время"}
+                    </Button>
+                  ) : (
+                    <Input
+                      id="time"
+                      type="time"
+                      value={eventTime}
+                      onChange={(e) => onEventSettingsChange({ eventDate, eventTime: e.target.value, roundDuration })}
+                      className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 rounded-xl"
+                    />
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -307,7 +391,7 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
                               name: newName.trim(),
                               gender: newGender,
                               description: "",
-                              eventId: activeEventId || (events[0]?.id ? String(events[0].id) : undefined),
+                              eventIds: activeEventId ? [activeEventId] : (events[0]?.id ? [String(events[0].id)] : undefined),
                             } as any)
                             if (newPaid) {
                               await api.updateParticipant(created.id, { paid: true })
@@ -316,9 +400,9 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
                             setOpenCreate(false)
                             setNewName("")
                             setNewPaid(false)
-                            toast({ title: "Участник добавлен" })
+                            toast({ title: "Участник добавлен", description: `${newName.trim()} успешно зарегистрирован` })
                           } catch (e: any) {
-                            toast({ title: "Ошибка добавления", description: e?.message ?? "Попробуйте ещё раз" })
+                            toast({ title: "Ошибка добавления", description: e?.message ?? "Попробуйте ещё раз", variant: "destructive" })
                           }
                         }}
                       >
@@ -448,14 +532,32 @@ export function AdminPanel({ onBack, onEventStart, eventDate, eventTime, roundDu
                           <Button size="sm" variant="ghost" className="p-1 h-8 w-8 text-blue-600 hover:bg-blue-100">
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDeleteParticipant(participant.id)}
-                            className="p-1 h-8 w-8 text-red-600 hover:bg-red-100"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => confirmDeleteParticipant(participant.id)}
+                                className="p-1 h-8 w-8 text-red-600 hover:bg-red-100"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Удалить участника?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Вы уверены, что хотите удалить участника "{participant.name}"? Это действие нельзя отменить.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel onClick={() => setDeleteParticipantId(null)}>Отмена</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteParticipant} className="bg-red-600 hover:bg-red-700">
+                                  Удалить
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       )}
                     </div>
