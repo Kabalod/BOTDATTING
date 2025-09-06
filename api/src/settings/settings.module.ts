@@ -7,5 +7,3 @@ import { SettingsController } from './settings.controller';
   providers: [SettingsService],
 })
 export class SettingsModule {}
-
-

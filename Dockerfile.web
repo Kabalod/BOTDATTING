@@ -4,19 +4,15 @@
 FROM node:20-slim AS deps
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
-
 # Copy dependency definition files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json package-lock.json ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN npm ci --legacy-peer-deps
 
 # Stage 2: Build the application
 FROM node:20-slim AS builder
 WORKDIR /app
-RUN npm install -g pnpm
 
 # Copy dependencies from the previous stage
 COPY --from=deps /app/node_modules ./node_modules
@@ -25,7 +21,7 @@ COPY . .
 # Build the Next.js application
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-RUN pnpm build
+RUN npm run build
 
 # Stage 3: Production image
 FROM node:20-slim AS runner
@@ -33,12 +29,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Install pnpm
-RUN npm install -g pnpm
-
 # Copy package files and install production dependencies
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
+COPY package.json package-lock.json ./
+RUN npm ci --legacy-peer-deps --only=production
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing

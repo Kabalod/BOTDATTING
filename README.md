@@ -48,21 +48,37 @@
     Приложение по умолчанию доступно на `http://localhost:3000`.
 
 3.  **Переменные окружения:**
-    Создайте файл `.env.local` в корне проекта и добавьте следующие переменные:
+    Скопируйте пример конфигурации и настройте переменные:
+    ```bash
+    cp env.example .env.local
+    ```
+
+    Основные переменные:
     ```env
-    # Telegram Bot Credentials
+    # API Configuration
+    NEXT_PUBLIC_API_URL="http://localhost:3001/api"
+
+    # Telegram Bot Configuration (получить у @BotFather)
     NEXT_PUBLIC_TELEGRAM_BOT_USERNAME="your_bot_username"
     TELEGRAM_BOT_TOKEN="your_telegram_bot_token"
 
-    # API Base URL для фронтенда
-    NEXT_PUBLIC_API_URL="http://localhost:4090/api"
+    # Database Configuration
+    DB_HOST="localhost"
+    DB_PORT="5432"
+    DB_USERNAME="postgres"
+    DB_PASSWORD="password"
+    DB_DATABASE="botdatting"
 
-    # Database connection (пример для будущей интеграции)
-    DATABASE_URL="postgresql://user:password@localhost:5432/mydatabase?schema=public"
-
-    # Redis connection (пример для будущей интеграции)
-    REDIS_URL="redis://localhost:6379"
+    # Redis Configuration
+    REDIS_HOST="localhost"
+    REDIS_PORT="6379"
     ```
+
+    **Настройка Telegram Bot:**
+    1. Перейдите к [@BotFather](https://t.me/botfather) в Telegram
+    2. Создайте нового бота командой `/newbot`
+    3. Получите токен и username бота
+    4. Установите webhook (для продакшена): `https://yourdomain.com/api/telegram/webhook`
 
 ## Известные примечания
 

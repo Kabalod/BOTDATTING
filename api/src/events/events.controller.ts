@@ -1,35 +1,37 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { EventsService } from './events.service';
-import type { EventItemDto } from './events.service';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { EventsService, EventItemDto } from './events.service';
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly service: EventsService) {}
+  constructor(private readonly eventsService: EventsService) {}
+
+  @Post()
+  async create(@Body() data: Omit<EventItemDto, 'id' | 'createdAt'>) {
+    return await this.eventsService.create(data);
+  }
 
   @Get()
-  list(): EventItemDto[] {
-    return this.service.list()
+  async list() {
+    return await this.eventsService.list();
   }
 
   @Get('next')
-  next(): EventItemDto | null {
-    return this.service.next()
+  async next() {
+    return await this.eventsService.next();
   }
 
-  @Post()
-  create(@Body() dto: Omit<EventItemDto, 'id' | 'createdAt'>): EventItemDto {
-    return this.service.create(dto)
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return await this.eventsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() patch: Partial<EventItemDto>) {
-    return this.service.update(id, patch)
+  async update(@Param('id') id: string, @Body() patch: Partial<EventItemDto>) {
+    return await this.eventsService.update(id, patch);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id)
+  async remove(@Param('id') id: string) {
+    return await this.eventsService.remove(id);
   }
 }
-
-

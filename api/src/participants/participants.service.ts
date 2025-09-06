@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateParticipantDto, Gender } from './dto/create-participant.dto';
 import { UpdateParticipantDto } from './dto/update-participant.dto';
 import { Participant } from './entities/participant.entity';
 
 @Injectable()
 export class ParticipantsService {
-  private readonly participants: Participant[] = []; // Временное хранилище в памяти
+  constructor(
+    @InjectRepository(Participant)
+    private participantsRepository: Repository<Participant>,
+  ) {}
 
-  create(createParticipantDto: CreateParticipantDto): Participant {
-    const newUser: Participant = {
-      id: String(this.participants.length + 1),
+  async create(createParticipantDto: CreateParticipantDto): Promise<Participant> {
+    const participant = this.participantsRepository.create({
       name: createParticipantDto.name,
       bio: createParticipantDto.bio,
       gender: createParticipantDto.gender as Gender,
@@ -17,35 +21,31 @@ export class ParticipantsService {
       ready: createParticipantDto.ready ?? false,
       paid: createParticipantDto.paid ?? false,
       registeredAt: new Date(),
-      createdAt: new Date(),
       eventIds: createParticipantDto.eventIds,
-    };
-    this.participants.push(newUser);
-    return newUser;
+    });
+    return await this.participantsRepository.save(participant);
   }
 
-  findAll(eventId?: string): Participant[] {
-    if (!eventId) return this.participants
-    return this.participants.filter((p) => p.eventIds?.includes(eventId))
+  async findAll(eventId?: string): Promise<Participant[]> {
+    if (!eventId) {
+      return await this.participantsRepository.find();
+    }
+    // Используем более простой подход - получаем всех и фильтруем в JavaScript
+    const allParticipants = await this.participantsRepository.find();
+    return allParticipants.filter(p => p.eventIds?.includes(eventId));
   }
 
-  findOne(id: string): Participant | undefined {
-    return this.participants.find((p) => p.id === id);
+  async findOne(id: string): Promise<Participant | null> {
+    return await this.participantsRepository.findOne({ where: { id } });
   }
 
-  update(id: string, updateParticipantDto: UpdateParticipantDto): Participant | undefined {
-    const idx = this.participants.findIndex((p) => p.id === id);
-    if (idx === -1) return undefined;
-    const updated: Participant = { ...this.participants[idx], ...updateParticipantDto } as Participant;
-    this.participants[idx] = updated;
-    return updated;
+  async update(id: string, updateParticipantDto: UpdateParticipantDto): Promise<Participant | null> {
+    await this.participantsRepository.update(id, updateParticipantDto);
+    return await this.participantsRepository.findOne({ where: { id } });
   }
 
-  remove(id: string): boolean {
-    const before = this.participants.length;
-    const after = this.participants.filter((p) => p.id !== id);
-    const removed = after.length !== before;
-    if (removed) this.participants.splice(0, this.participants.length, ...after);
-    return removed;
+  async remove(id: string): Promise<boolean> {
+    const result = await this.participantsRepository.delete(id);
+    return (result.affected ?? 0) > 0;
   }
 }

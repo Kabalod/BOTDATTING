@@ -8,27 +8,27 @@ export class ParticipantsController {
   constructor(private readonly participantsService: ParticipantsService) {}
 
   @Post()
-  create(@Body() createParticipantDto: CreateParticipantDto) {
-    return this.participantsService.create(createParticipantDto);
+  async create(@Body() createParticipantDto: CreateParticipantDto) {
+    return await this.participantsService.create(createParticipantDto);
   }
 
   @Get()
-  findAll(@Query('eventId') eventId?: string) {
-    return this.participantsService.findAll(eventId);
+  async findAll(@Query('eventId') eventId?: string) {
+    return await this.participantsService.findAll(eventId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.participantsService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    return await this.participantsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateParticipantDto: UpdateParticipantDto) {
-    return this.participantsService.update(id, updateParticipantDto);
+  async update(@Param('id') id: string, @Body() updateParticipantDto: UpdateParticipantDto) {
+    return await this.participantsService.update(id, updateParticipantDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.participantsService.remove(id);
+  async remove(@Param('id') id: string) {
+    return await this.participantsService.remove(id);
   }
 }

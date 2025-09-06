@@ -2,22 +2,47 @@ import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, IsArray
 
 export enum Gender {
   MALE = 'MALE',
-  FEMALE = 'FEMALE',
+  FEMALE = 'FEMALE'
 }
+
 export class CreateParticipantDto {
   @IsString()
   @IsOptional()
-  @MaxLength(100)
   name?: string;
 
   @IsString()
   @IsOptional()
-  @MaxLength(500)
   bio?: string;
 
   @IsEnum(Gender)
-  @IsNotEmpty()
   gender: Gender;
+
+  @IsBoolean()
+  @IsOptional()
+  ready?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  paid?: boolean;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  eventIds?: string[];
+}
+
+export class UpdateParticipantDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  bio?: string;
+
+  @IsEnum(['REGISTERED', 'PRESENT', 'MATCHED'])
+  @IsOptional()
+  status?: 'REGISTERED' | 'PRESENT' | 'MATCHED';
 
   @IsBoolean()
   @IsOptional()
