@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { RegistrationForm } from "@/features/guest/RegistrationForm"
 import { WaitingRoom } from "@/features/guest/WaitingRoom"
 import { SpeedDatingRoom } from "@/features/guest/SpeedDatingRoom"
-import { AdminPanel } from "@/features/admin/AdminPanel"
 import { Button } from "@/shared/ui/button"
 import { Card } from "@/shared/ui/card"
 import { Heart, Users, Clock, Settings, Zap, MessageCircle, ExternalLink } from "lucide-react"
@@ -14,12 +14,24 @@ import { api } from "@/shared/api"
 import { useToast } from "@/shared/ui/use-toast"
 import { useTelegram } from "@/shared/hooks/useTelegram"
 
-type AppState = "welcome" | "chat" | "registration" | "waiting" | "dating" | "admin"
-// type UserRole = "guest" | "admin" // TODO: Use for role-based features
+type AppState = "roleSelection" | "welcome" | "chat" | "registration" | "waiting" | "dating" | "admin"
 
 export default function ITSpeedDatingApp() {
-  const [appState, setAppState] = useState<AppState>("chat") // Start with chat instead of welcome
-  // const [userRole, setUserRole] = useState<UserRole>("guest") // TODO: Use for role-based features
+  const router = useRouter()
+  const [appState, setAppState] = useState<AppState>(() => {
+    // Если роль уже сохранена, пропускаем выбор роли
+    if (typeof window !== 'undefined' && localStorage.getItem('userRole')) {
+      return 'welcome'
+    }
+    return 'roleSelection'
+  }) // Start with role selection or welcome if role exists
+  const [userRole, setUserRole] = useState<string>(() => {
+    // Загружаем роль из localStorage, если есть
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('userRole') || 'guest'
+    }
+    return 'guest'
+  }) // User role for admin access
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [eventStartTime, setEventStartTime] = useState<Date | null>(null)
   const [roundDurationMin, setRoundDurationMin] = useState<number>(7)
@@ -48,6 +60,78 @@ export default function ITSpeedDatingApp() {
 
   const handleEventStart = () => {
     setAppState("dating")
+  }
+
+  if (appState === "roleSelection") {
+    return (
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600">
+        <div className="absolute inset-0 bg-black/20"></div>
+
+        <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+          <Card className="w-full max-w-md p-8 bg-white/95 backdrop-blur-sm shadow-2xl">
+            <div className="text-center mb-8">
+              <div className="flex justify-center mb-6">
+                <div className="pro-it-card p-6 rounded-3xl">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600">
+                    <Settings className="w-16 h-16 text-white drop-shadow-lg" />
+                  </div>
+                </div>
+              </div>
+
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">IT Speed Dating</h1>
+              <p className="text-gray-600 text-lg">by Анна Афонина</p>
+              <div className="mt-2 text-sm text-gray-500 font-medium">
+                Выберите режим тестирования
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Button
+                onClick={() => {
+                  setUserRole("admin")
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('userRole', 'admin')
+                  }
+                  setAppState("welcome")
+                }}
+                className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold group relative overflow-hidden shadow-lg"
+                size="lg"
+              >
+                <div className="flex items-center justify-center gap-3 relative z-10">
+                  <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+                  Администратор
+                  <Users className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                </div>
+              </Button>
+
+              <Button
+                onClick={() => {
+                  setUserRole("guest")
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('userRole', 'guest')
+                  }
+                  setAppState("welcome")
+                }}
+                variant="outline"
+                className="w-full h-14 text-lg group border-2 border-gray-300 hover:border-blue-500 text-gray-700 hover:text-blue-600 font-semibold hover:bg-blue-50 transition-all duration-300"
+                size="lg"
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <Heart className="w-5 h-5 group-hover:scale-110 transition-transform duration-300 text-pink-500" />
+                  Пользователь
+                  <Zap className="w-5 h-5 group-hover:scale-110 transition-transform duration-300 text-yellow-500" />
+                </div>
+              </Button>
+            </div>
+
+            <div className="mt-6 text-center text-sm text-gray-500">
+              <p>Админ имеет доступ к полной панели управления</p>
+              <p>Пользователь видит только интерфейс участника</p>
+            </div>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   if (appState === "chat") {
@@ -181,18 +265,17 @@ export default function ITSpeedDatingApp() {
               </div>
             </Button>
 
-            <Button
-              onClick={() => {
-                setUserRole("admin")
-                setAppState("admin")
-              }}
-              variant="outline"
-              className="w-full h-12 group border-white/30 hover:border-white/50 text-white hover:bg-white/10"
-              size="lg"
-            >
-              <Settings className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-500" />
-              Панель администратора
-            </Button>
+            {userRole === "admin" && (
+              <Button
+                onClick={() => router.push('/admin')}
+                variant="outline"
+                className="w-full h-12 group border-white/30 hover:border-white/50 text-white hover:bg-white/10"
+                size="lg"
+              >
+                <Settings className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-500" />
+                Панель администратора
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -219,20 +302,11 @@ export default function ITSpeedDatingApp() {
   }
 
   if (appState === "admin") {
-    return (
-      <AdminPanel
-        onBack={() => setAppState("welcome")}
-        onEventStart={handleEventStart}
-        eventDate={eventDate}
-        eventTime={eventTimeStr}
-        roundDuration={roundDurationMin}
-        onEventSettingsChange={({ eventDate: d, eventTime: t, roundDuration: r }) => {
-          setEventDate(d)
-          setEventTimeStr(t)
-          setRoundDurationMin(r)
-        }}
-      />
-    )
+    // Перенаправление на отдельную админ страницу
+    if (typeof window !== 'undefined') {
+      window.location.href = '/admin'
+    }
+    return null
   }
 
   return null

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { EventsService, EventItemDto } from './events.service';
 
 @Controller('events')
@@ -11,8 +11,9 @@ export class EventsController {
   }
 
   @Get()
-  async list() {
-    return await this.eventsService.list();
+  async list(@Query('city') city?: string, @Query('activeOnly') activeOnly?: string) {
+    const activeOnlyBool = activeOnly !== 'false';
+    return await this.eventsService.list(city, activeOnlyBool);
   }
 
   @Get('next')

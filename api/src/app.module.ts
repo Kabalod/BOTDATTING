@@ -7,8 +7,10 @@ import { AppService } from './app.service';
 import { ParticipantsModule } from './participants/participants.module';
 import { SettingsModule } from './settings/settings.module';
 import { EventsModule } from './events/events.module';
+import { WaitlistModule } from './waitlist/waitlist.module';
 import { Participant } from './participants/entities/participant.entity';
 import { Event } from './events/entities/event.entity';
+import { WaitlistEntry } from './waitlist/entities/waitlist.entity';
 
 @Module({
   imports: [
@@ -30,13 +32,14 @@ import { Event } from './events/entities/event.entity';
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'password',
       database: process.env.DB_DATABASE || 'botdatting',
-      entities: [Participant, Event],
+      entities: [Participant, Event, WaitlistEntry],
       synchronize: true, // В продакшене использовать миграции
       logging: process.env.NODE_ENV === 'development',
     }),
     ParticipantsModule,
     SettingsModule,
     EventsModule,
+    WaitlistModule,
   ],
   controllers: [AppController],
   providers: [AppService],
